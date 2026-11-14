@@ -14,11 +14,10 @@ st.set_page_config(
     page_title="Dashboard Pronostici Pro", page_icon="⚽", layout="wide"
 )
 
-# Stile CSS ultra-avanzato per una grafica colorata, moderna e di lusso
+# Stile CSS per una grafica moderna e pulita
 st.markdown(
     """
     <style>
-    /* Spazio di sicurezza superiore e pulizia layout */
     .block-container {
         padding-top: 1rem !important;
         padding-bottom: 1.5rem !important;
@@ -26,8 +25,6 @@ st.markdown(
         padding-right: 1.5rem !important;
         max-width: 100% !important;
     }
-
-    /* Ottimizzazione della barra laterale con stile moderno */
     section[data-testid="stSidebar"] {
         width: 320px !important;
         background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%) !important;
@@ -36,12 +33,6 @@ st.markdown(
     section[data-testid="stSidebar"] * {
         font-size: 0.85rem !important;
     }
-    section[data-testid="stSidebar"] .block-container {
-        padding-top: 1rem !important;
-        gap: 0.4rem !important;
-    }
-
-    /* Pulsanti con effetto hover luminoso */
     div.stButton > button, div.stDownloadButton > button {
         border-radius: 10px;
         font-weight: 600;
@@ -55,12 +46,6 @@ st.markdown(
         transform: translateY(-2px);
         box-shadow: 0 6px 12px rgba(0,0,0,0.15);
         color: white;
-    }
-
-    /* Stile tabelle e metriche */
-    div[data-testid="stMetricValue"] {
-        font-size: 1.4rem !important;
-        font-weight: 700 !important;
     }
     </style>
     """,
@@ -89,27 +74,27 @@ def salva_archivio(archivio):
     pass
 
 
-def genera_pdf_schedina(schedina, partite_verificate, etichetta_stato):
-  """Genera un PDF pulito in stile ricevuta/ticket scommesse."""
-  def pulisci_testo(txt):
-    # Sostituisce eventuali emoji o caratteri non supportati dal font standard Latin-1
-    return (
-        str(txt)
-        .replace("✅", "[VINTA]")
-        .replace("❌", "[PERSA]")
-        .replace("⏳", "[IN ATTESA]")
-        .replace("🟢", "")
-        .replace("🔴", "")
-        .encode("latin-1", "ignore")
-        .decode("latin-1")
-        .strip()
-    )
+def pulisci_testo_pdf(txt):
+  return (
+      str(txt)
+      .replace("—", "-")
+      .replace("–", "-")
+      .replace("✅", "[VINTA]")
+      .replace("❌", "[PERSA]")
+      .replace("⏳", "[IN ATTESA]")
+      .replace("🟢", "")
+      .replace("🔴", "")
+      .encode("latin-1", "ignore")
+      .decode("latin-1")
+      .strip()
+  )
 
+
+def genera_pdf_schedina(schedina, partite_verificate, etichetta_stato):
   pdf = FPDF()
   pdf.add_page()
   pdf.set_auto_page_break(auto=True, margin=15)
 
-  # Intestazione Ticket
   pdf.set_fill_color(15, 32, 39)
   pdf.rect(10, 10, 190, 26, "F")
   pdf.set_text_color(255, 255, 255)
@@ -118,13 +103,11 @@ def genera_pdf_schedina(schedina, partite_verificate, etichetta_stato):
   pdf.cell(0, 8, "RICEVUTA SCHEDINA - BETTING ANALYTICS PRO", ln=True)
   pdf.set_font("Helvetica", "", 10)
   pdf.set_x(15)
-  data_salv = pulisci_testo(schedina.get("data_salvataggio", "N/D"))
-  stato_clean = pulisci_testo(etichetta_stato)
+  data_salv = pulisci_testo_pdf(schedina.get("data_salvataggio", "N/D"))
+  stato_clean = pulisci_testo_pdf(etichetta_stato)
   pdf.cell(0, 6, f"Data Emissione: {data_salv}   |   Stato Ticket: {stato_clean}", ln=True)
 
   pdf.ln(10)
-
-  # Intestazione Tabella Eventi
   pdf.set_text_color(33, 37, 41)
   pdf.set_font("Helvetica", "B", 11)
   pdf.cell(0, 8, "DETTAGLIO EVENTI IN GIOCATA:", ln=True)
@@ -138,15 +121,14 @@ def genera_pdf_schedina(schedina, partite_verificate, etichetta_stato):
     pdf.cell(w, 8, h, border=1, fill=True, align="C")
   pdf.ln()
 
-  # Righe Partite
   pdf.set_font("Helvetica", "", 8)
   for p in partite_verificate:
-    data_ora = pulisci_testo(f"{p.get('Data', '')} {p.get('Ora', '')}")[:16]
-    camp = pulisci_testo(p.get("Campionato", ""))[:22]
-    match = pulisci_testo(p.get("Match", ""))[:30]
-    esito = pulisci_testo(p.get("Esito", ""))[:22]
-    quota = pulisci_testo(f"{float(p.get('Quota', 1.0)):.2f}")
-    ris = pulisci_testo(p.get("Risultato Reale", "In attesa"))[:14]
+    data_ora = pulisci_testo_pdf(f"{p.get('Data', '')} {p.get('Ora', '')}")[:16]
+    camp = pulisci_testo_pdf(p.get("Competizione", p.get("Campionato", "N/D")))[:22]
+    match = pulisci_testo_pdf(p.get("Match", ""))[:30]
+    esito = pulisci_testo_pdf(p.get("Consiglio", p.get("Esito", "N/D")))[:22]
+    quota = pulisci_testo_pdf(f"{float(p.get('Quota', 1.0)):.2f}")
+    ris = pulisci_testo_pdf(p.get("Risultato Reale", "In attesa"))[:14]
 
     pdf.cell(col_widths[0], 7, data_ora, border=1, align="C")
     pdf.cell(col_widths[1], 7, camp, border=1)
@@ -159,8 +141,6 @@ def genera_pdf_schedina(schedina, partite_verificate, etichetta_stato):
     pdf.ln()
 
   pdf.ln(8)
-
-  # Box Riepilogo Importi
   importo = float(schedina.get("importo_giocato", 0.0))
   quota_tot = float(schedina.get("quota_totale", 1.0))
   vincita = round(importo * quota_tot, 2)
@@ -180,11 +160,75 @@ def genera_pdf_schedina(schedina, partite_verificate, etichetta_stato):
   pdf.set_text_color(25, 135, 84)
   pdf.cell(0, 8, f"VINCITA POTENZIALE: EUR {vincita:.2f}", ln=True)
 
-  # Restituisce i byte del PDF pronti per st.download_button
   return bytes(pdf.output())
 
 
-# Gestione fuso orario di Roma
+def genera_pdf_archivio_globale(archivio_lista):
+  pdf = FPDF()
+  pdf.add_page()
+  pdf.set_auto_page_break(auto=True, margin=15)
+
+  pdf.set_fill_color(15, 32, 39)
+  pdf.rect(10, 10, 190, 26, "F")
+  pdf.set_text_color(255, 255, 255)
+  pdf.set_font("Helvetica", "B", 14)
+  pdf.set_xy(15, 14)
+  pdf.cell(0, 8, "RIEPILOGO GENERALE ARCHIVIO SCOMMESSE", ln=True)
+  pdf.set_font("Helvetica", "", 10)
+  pdf.set_x(15)
+  data_oggi = datetime.now(tz_roma).strftime("%d/%m/%Y %H:%M")
+  pdf.cell(0, 6, pulisci_testo_pdf(f"Data Generazione: {data_oggi}   |   Totale Ticket Salvati: {len(archivio_lista)}"), ln=True)
+
+  pdf.ln(10)
+
+  for idx, schedina in enumerate(archivio_lista):
+    pdf.set_text_color(15, 32, 39)
+    pdf.set_font("Helvetica", "B", 10)
+    data_ticket = schedina.get("data_salvataggio", "N/D")
+    q_tot = schedina.get("quota_totale", 1.0)
+    puntata = schedina.get("importo_giocato", 0.0)
+    
+    titolo_ticket = pulisci_testo_pdf(f"TICKET #{len(archivio_lista) - idx} del {data_ticket} - Quota: {q_tot} - Puntata: EUR {puntata:.2f}")
+    pdf.cell(0, 6, titolo_ticket, ln=True)
+    pdf.ln(1)
+
+    pdf.set_fill_color(233, 236, 239)
+    pdf.set_font("Helvetica", "B", 8)
+    col_widths = [26, 38, 56, 36, 14, 20]
+    headers = ["Data/Ora", "Campionato", "Match", "Esito", "Quota", "Stato"]
+    for w, h in zip(col_widths, headers):
+      pdf.cell(w, 6, h, border=1, fill=True, align="C")
+    pdf.ln()
+
+    pdf.set_font("Helvetica", "", 7.5)
+    for p in schedina.get("partite", []):
+      d_ora = pulisci_testo_pdf(f"{p.get('Data', '')} {p.get('Ora', '')}")[:16]
+      camp = pulisci_testo_pdf(p.get("Competizione", p.get("Campionato", "N/D")))[:22]
+      match = pulisci_testo_pdf(p.get("Match", ""))[:32]
+      esito = pulisci_testo_pdf(p.get("Consiglio", p.get("Esito", "N/D")))[:22]
+      q = pulisci_testo_pdf(f"{float(p.get('Quota', 1.0)):.2f}")
+      
+      _, _, fw = verifica_risultato_partita(
+          p.get("Competizione", p.get("Campionato", "")),
+          p.get("Match", ""),
+          p.get("Consiglio", p.get("Esito", ""))
+      )
+      stato_p = "In attesa" if fw is None else ("Vinta" if fw else "Persa")
+
+      pdf.cell(col_widths[0], 6, d_ora, border=1, align="C")
+      pdf.cell(col_widths[1], 6, camp, border=1)
+      pdf.cell(col_widths[2], 6, match, border=1)
+      pdf.cell(col_widths[3], 6, esito, border=1)
+      pdf.cell(col_widths[4], 6, q, border=1, align="C")
+      pdf.cell(col_widths[5], 6, stato_p, border=1, align="C")
+      pdf.ln()
+
+    pdf.ln(6)
+
+  return bytes(pdf.output())
+
+
+# Fuso orario Roma
 tz_roma = ZoneInfo("Europe/Rome")
 oggi_dt = datetime.now(tz_roma)
 oggi_date = oggi_dt.date()
@@ -194,7 +238,7 @@ ESPN_GLOBAL_SCOREBOARD = (
 )
 
 # ==========================================
-# INIZIALIZZAZIONE SICURA STATO SESSIONE
+# INIZIALIZZAZIONE STATO SESSIONE
 # ==========================================
 if "partite_scelte_globali" not in st.session_state:
   st.session_state.partite_scelte_globali = {}
@@ -205,7 +249,6 @@ if "data_corrente" not in st.session_state:
 if "archivio_scommesse" not in st.session_state:
   st.session_state.archivio_scommesse = carica_archivio()
 
-# Gestione pulizia carrello o rimozione prima dell'instanziazione dei widget
 if st.session_state.get("richiesta_svuota", False):
   st.session_state.partite_scelte_globali = {}
   for k in list(st.session_state.keys()):
@@ -225,7 +268,7 @@ if st.session_state.get("richiesta_rimuovi_id"):
   st.session_state.richiesta_rimuovi_id = None
   st.rerun()
 
-# Intestazione grafica spettacolare con gradiente vibrante
+# Intestazione grafica
 st.markdown(
     """
     <div style="background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); padding: 22px 28px; border-radius: 14px; color: white; margin-top: 5px; margin-bottom: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.12); border: 1px solid rgba(255,255,255,0.1);">
@@ -248,7 +291,7 @@ st.markdown(
 )
 
 # ==========================================
-# BARRA LATERALE (SIDEBAR) A SINISTRA
+# BARRA LATERALE (SIDEBAR)
 # ==========================================
 st.sidebar.markdown("### 🎛️ Filtri & Navigazione")
 st.sidebar.markdown("📅 **Seleziona il giorno**")
@@ -283,7 +326,7 @@ data_display = st.session_state.data_corrente.strftime("%d/%m/%Y")
 
 
 # ==========================================
-# FUNZIONI DI SUPPORTO E VERIFICA RISULTATI
+# FUNZIONI DI SUPPORTO
 # ==========================================
 def valuta_esito(esito, gol_casa, gol_ospite):
   tot_gol = gol_casa + gol_ospite
@@ -344,9 +387,6 @@ def verifica_risultato_partita(competizione, match_str, esito_consigliato):
   return "⏳ In attesa", "N/D", None
 
 
-# ==========================================
-# MOTORE DI AUTO-APPRENDIMENTO (MACHINE LEARNING)
-# ==========================================
 def calcola_fattori_apprendimento():
   correzioni = {}
   for schedina in st.session_state.archivio_scommesse:
@@ -354,10 +394,9 @@ def calcola_fattori_apprendimento():
       match_str = p.get("Match", "")
       if " vs " in match_str:
         casa, ospite = match_str.split(" vs ")
-        comp = p.get("Campionato", "")
-        res_reale, _, _ = verifica_risultato_partita(
-            comp, match_str, p.get("Esito", "")
-        )
+        comp = p.get("Competizione", p.get("Campionato", ""))
+        esito_val = p.get("Consiglio", p.get("Esito", ""))
+        res_reale, _, _ = verifica_risultato_partita(comp, match_str, esito_val)
         if (
             res_reale
             and " - " in res_reale
@@ -390,7 +429,6 @@ def calcola_fattori_apprendimento():
   return fattori
 
 
-# Funzioni di calcolo statistico avanzato
 def calcola_probabilita_poisson(lambda_casa, lambda_ospite):
   max_goals = 6
   prob_matrix = np.zeros((max_goals, max_goals))
@@ -475,40 +513,12 @@ def genera_analisi_statistica_avanzata(casa, ospite, competizione):
   ev_val = (quota_media * prob_decimale) - 1.0
   is_value_bet = ev_val > 0.05
 
-  dropping_odds = "📉 Quota in discesa (Smart Money confermato)" if (hash_val % 3 == 0) else "⚖️ Mercato stabile"
-
+  dropping_odds = "📉 Quota in discesa" if (hash_val % 3 == 0) else "⚖️ Mercato stabile"
   tot_xg = lambda_casa + lambda_ospite
-  if "1 (" in consiglio:
-    motivazione_dettagliata = (
-        f"[{competizione}] Scelta basata sulla forte superiorità di {casa} nei gol attesi "
-        f"(xG {lambda_casa} vs {lambda_ospite}) e sul fattore campo favorevole. "
-        f"Momentum: {dropping_odds}."
-    )
-  elif "2 (" in consiglio:
-    motivazione_dettagliata = (
-        f"[{competizione}] Modello orientato verso il colpo esterno: {ospite} produce un volume offensivo "
-        f"di {lambda_ospite} xG che sfrutta le debolezze difensive di {casa}. "
-        f"Momentum: {dropping_odds}."
-    )
-  elif "Over 2.5" in consiglio:
-    motivazione_dettagliata = (
-        f"[{competizione}] Partita ad altissima vocazione offensiva: il totale dei gol attesi ($xG$) "
-        f"raggiunge quota {tot_xg:.2f} ({casa} {lambda_casa} - {ospite} {lambda_ospite}). "
-        f"Momentum: {dropping_odds}."
-    )
-  elif "Goal" in consiglio:
-    motivazione_dettagliata = (
-        f"[{competizione}] Entrambe le squadre evidenziano un potenziale offensivo solido "
-        f"(Casa {lambda_casa} xG, Ospite {lambda_ospite} xG). "
-        f"Momentum: {dropping_odds}."
-    )
-  else:
-    motivazione_dettagliata = (
-        f"[{competizione}] Opzione di copertura statistica ad alta affidabilità ({max_prob}%). "
-        f"Flussi xG bilanciati ({lambda_casa} vs {lambda_ospite}). "
-        f"Momentum: {dropping_odds}."
-    )
 
+  motivazione_dettagliata = (
+      f"[{competizione}] Modello xG: {lambda_casa} vs {lambda_ospite}. Totale atteso {tot_xg:.2f} gol. {dropping_odds}."
+  )
   appreso_txt = (
       " [🤖 Auto-appreso]"
       if (casa in fattori_apprendimento or ospite in fattori_apprendimento)
@@ -597,7 +607,6 @@ def scarica_tutte_partite(data_str_target, data_param_yyyymmdd):
   except Exception:
     pass
 
-  # Fallback di sicurezza: inietta le partite reali della Nations League per testare subito la piattaforma
   if not partite_trovate and data_str_target == "2026-11-14":
     match_nations = [
         ("Kosovo", "Israele", "18:00", "UEFA Nations League"),
@@ -640,8 +649,19 @@ with st.spinner(
       data_selezionata_str, data_api_param
   )
 
-# Selectbox dinamica dei campionati nella barra laterale
-lista_campionati_scelta = ["Tutti i campionati"] + lista_tornei
+campionati_principali = [
+    "Serie A",
+    "Premier League",
+    "La Liga",
+    "Bundesliga",
+    "Ligue 1",
+    "UEFA Champions League",
+    "UEFA Europa League",
+    "UEFA Nations League"
+]
+lista_tornei_totale = sorted(list(set(campionati_principali + lista_tornei)))
+
+lista_campionati_scelta = ["Tutti i campionati"] + lista_tornei_totale
 campionato_selezionato = st.sidebar.selectbox(
     "🏆 Filtra Campionato", lista_campionati_scelta
 )
@@ -660,14 +680,11 @@ criterio_ordinamento = st.sidebar.selectbox(
 )
 
 st.sidebar.info(
-    f"📌 **Stato Filtri Correnti:**\n- Data: **{data_display}**\n- Torneo:"
-    f" **{campionato_selezionato}**\n- Soglia Min: **{soglia_prob_min}%**"
+    f"📌 **Filtri Correnti:**\nData: **{data_display}**\nTorneo: **{campionato_selezionato}**\nSoglia Min: **{soglia_prob_min}%**"
 )
 
 st.sidebar.markdown("---")
 
-
-# Filtraggio finale in base ai menu
 lista_finale = []
 for m in lista_grezza:
   if (
@@ -677,16 +694,12 @@ for m in lista_grezza:
     if m["ValoreProb"] >= soglia_prob_min:
       lista_finale.append(m)
 
-
-# ==========================================
-# GESTIONE CHECKBOX E AGGIORNAMENTO STATO
-# ==========================================
 num_salvate = len(st.session_state.partite_scelte_globali)
 num_archivio = len(st.session_state.archivio_scommesse)
 st.sidebar.markdown(f"🛒 **Match nel Carrello:** `{num_salvate}`")
 
 # ==========================================
-# ORGANIZZAZIONE PRINCIPALE A SCHEDE (TABS)
+# ORGANIZZAZIONE A SCHEDE (TABS)
 # ==========================================
 tab_palinsesto, tab_carrello, tab_archivio, tab_bilancio = st.tabs([
     "⚽ Palinsesto & Partite",
@@ -708,12 +721,11 @@ with tab_palinsesto:
       )
 
     st.success(
-        f"Trovate **{len(lista_finale)} partite ufficiali** per il"
-        f" **{data_display}** (Filtro torneo: {campionato_selezionato}),"
-        f" ordinate per {criterio_ordinamento.lower()}."
+        f"Trovate **{len(lista_finale)} partite** per il **{data_display}** (Filtro: {campionato_selezionato})."
     )
 
-    col_sel1, col_sel2, col_sel3 = st.columns([0.25, 0.25, 0.5])
+    # Pulsanti Seleziona Tutti e Deseleziona Tutti armonizzati, uguali e compatti (proporzione 1:1)
+    col_sel1, col_sel2, col_spazio = st.columns([0.28, 0.28, 0.44])
     with col_sel1:
       if st.button("☑️ Seleziona Tutti", use_container_width=True):
         for m in lista_finale:
@@ -752,7 +764,6 @@ with tab_palinsesto:
 
       bg_color = "linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)" if is_checked else "#ffffff"
       border_color = "#2e7d32" if is_checked else "#e0e0e0"
-
       vb_badge = (
           "&nbsp;&nbsp;<span style='background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%); color: white;"
           " padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight:"
@@ -760,7 +771,6 @@ with tab_palinsesto:
           if match.get("ValueBet")
           else ""
       )
-
       prob_val = match["ValoreProb"]
       bar_color = "linear-gradient(90deg, #11998e 0%, #38ef7d 100%)" if prob_val >= 60 else "linear-gradient(90deg, #f2994a 0%, #f2c94c 100%)" if prob_val >= 50 else "linear-gradient(90deg, #eb3349 0%, #f45c43 100%)"
 
@@ -796,14 +806,7 @@ with tab_palinsesto:
           unsafe_allow_html=True,
       )
   else:
-    st.warning(
-        f"⚠️ **Nessuna partita ufficiale trovata per il {data_display}** con i"
-        f" criteri selezionati (Soglia prob: {soglia_prob_min}%)."
-    )
-    st.info(
-        "Prova a spostarti su un'altra data (tramite le frecce in alto nella"
-        " barra laterale) in cui sono previsti incontri ufficiali."
-    )
+    st.warning(f"⚠️ **Nessuna partita trovata per il {data_display}** con i criteri selezionati.")
 
   if st.button("🔄 Aggiorna Palinsesto & Quote Live"):
     st.cache_data.clear()
@@ -811,23 +814,12 @@ with tab_palinsesto:
 
 # --- TAB 2: CARRELLO SCOMMESSE ---
 with tab_carrello:
-  st.subheader("🛒 Gestione Schedina Corrente & Risk Shield (Multi-Bet)")
+  st.subheader("🛒 Gestione Schedina Corrente & Risk Shield")
   if st.session_state.partite_scelte_globali:
     num_partite_carrello = len(st.session_state.partite_scelte_globali)
-    st.markdown(
-        f"Hai selezionato **{num_partite_carrello} partite** per la tua giocata combinata. Puoi modificare manualmente la quota di ciascun evento."
-    )
-    
-    if num_partite_carrello > 4:
-      st.warning("⚠️ **Avviso Risk Shield:** Stai inserendo più di 4 eventi in multipla. L'esposizione al rischio statistico aumenta esponenzialmente. Valuta di suddividere la giocata in più ticket.")
-    else:
-      st.success("🛡️ **Risk Shield:** Esposizione della multipla entro i limiti di sicurezza consigliati.")
+    st.markdown(f"Hai selezionato **{num_partite_carrello} partite** per la tua giocata combinata.")
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    chiavi_da_rimuovere = []
     quota_totale = 1.0
-
     for match_id, m in list(st.session_state.partite_scelte_globali.items()):
       r_col1, r_col2, r_col3, r_col4, r_col5, r_col6 = st.columns(
           [0.15, 0.15, 0.22, 0.22, 0.16, 0.1]
@@ -848,400 +840,221 @@ with tab_carrello:
           label_visibility="collapsed"
       )
       m["Quota"] = round(nuova_quota, 2)
+      quota_totale *= m["Quota"]
 
-      if r_col6.button("❌", key=f"del_cart_{match_id}", help="Rimuovi partita"):
+      if r_col6.button("❌", key=f"del_cart_{match_id}", help="Rimuovi"):
         st.session_state.richiesta_rimuovi_id = match_id
         st.rerun()
 
-      quota_totale *= m["Quota"]
-
-    quota_totale = round(quota_totale, 2)
     st.markdown("---")
+    c_inf1, c_inf2, c_inf3 = st.columns(3)
+    c_inf1.metric("📊 Eventi", num_partite_carrello)
+    c_inf2.metric("💰 Quota Totale", f"{quota_totale:.2f}")
+    importo_giocato = c_inf3.number_input("💵 Puntata (€)", min_value=1.0, max_value=10000.0, value=10.0, step=5.0)
+    vincita_potenziale = round(importo_giocato * quota_totale, 2)
+    st.info(f"🏆 **Vincita Potenziale:** € {vincita_potenziale:.2f}")
 
-    col_q1, _ = st.columns([0.5, 0.5])
-    with col_q1:
-      importo_puntata = st.number_input(
-          "💵 Importo da scommettere (€):",
-          min_value=1.0,
-          value=10.0,
-          step=1.0,
-      )
-
-    vincita_prevista = round(importo_puntata * quota_totale, 2)
-    st.markdown(
-        f"<div style='padding: 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; font-size: 1.1rem;'>💰 <b>Quota Totale:"
-        f"</b> <code>{quota_totale}</code> | 🏆 <b>Vincita Potenziale:</b> <b"
-        f" style='color: #198754;'>€ {vincita_prevista:.2f}</b></div>",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    col_btn1, col_btn2 = st.columns([0.3, 0.7])
+    col_btn1, col_btn2 = st.columns(2)
     with col_btn1:
-      if st.button(
-          "💾 Salva Schedina in Archivio",
-          type="primary",
-          use_container_width=True,
-      ):
+      if st.button("💾 Salva Schedina in Archivio", use_container_width=True):
         nuova_schedina = {
-            "data_salvataggio": datetime.now(tz_roma).strftime(
-                "%d/%m/%Y %H:%M:%S"
-            ),
-            "quota_totale": quota_totale,
-            "importo_giocato": importo_puntata,
-            "vincita_potenziale": vincita_prevista,
-            "partite": [
-                {
-                    "Data": m["Data"],
-                    "Ora": m["Ora"],
-                    "Campionato": m["Competizione"],
-                    "Match": m["Match"],
-                    "Esito": m["Consiglio"],
-                    "Quota": m["Quota"],
-                }
-                for m in st.session_state.partite_scelte_globali.values()
-            ],
+            "id_schedina": f"schedina_{datetime.now(tz_roma).strftime('%Y%m%d_%H%M%S')}",
+            "data_salvataggio": datetime.now(tz_roma).strftime("%d/%m/%Y %H:%M"),
+            "partite": list(st.session_state.partite_scelte_globali.values()),
+            "quota_totale": round(quota_totale, 2),
+            "importo_giocato": float(importo_giocato),
+            "vincita_potenziale": float(vincita_potenziale),
         }
-        st.session_state.archivio_scommesse.append(nuova_schedina)
+        st.session_state.archivio_scommesse.insert(0, nuova_schedina)
         salva_archivio(st.session_state.archivio_scommesse)
-        
-        for m_id in list(st.session_state.partite_scelte_globali.keys()):
-          if f"chk_{m_id}" in st.session_state:
-            del st.session_state[f"chk_{m_id}"]
-          if f"edit_quota_{m_id}" in st.session_state:
-            del st.session_state[f"edit_quota_{m_id}"]
-        st.session_state.partite_scelte_globali = {}
-        
-        st.success("🎉 Schedina salvata in archivio e carrello svuotato!")
-        st.rerun()
-
+        st.success("✅ Schedina salvata nell'archivio cloud!")
     with col_btn2:
-      if st.button("🗑️ Svuota Carrello", use_container_width=False):
+      if st.button("🗑️ Svuota Carrello", use_container_width=True):
         st.session_state.richiesta_svuota = True
         st.rerun()
-
   else:
-    st.info(
-        "🛒 Il carrello è vuoto. Torna al palinsesto e spunta le partite che"
-        " desideri inserire nella schedina."
-    )
+    st.info("🛒 Il carrello è vuoto. Seleziona i match dal tab 'Palinsesto & Partite'.")
 
 # --- TAB 3: ARCHIVIO SCOMMESSE ---
 with tab_archivio:
-  st.subheader("📂 Archivio Storico Schedine")
-  schedine_count = len(st.session_state.archivio_scommesse)
-
-  if schedine_count > 0:
-    totale_corso_importo = 0.0
-    totale_vincita_potenziale = 0.0
-
-    for schedina in st.session_state.archivio_scommesse:
-      tutti_finiti = True
-      for p in schedina.get("partite", []):
-        _, _, esito_bool = verifica_risultato_partita(
-            p.get("Campionato", ""), p.get("Match", ""), p.get("Esito", "")
-        )
-        if esito_bool is None:
-          tutti_finiti = False
-
-      if not tutti_finiti:
-        totale_corso_importo += float(schedina.get("importo_giocato", 0.0))
-      
-      totale_vincita_potenziale += float(schedina.get("vincita_potenziale", 0.0))
-
-    # Visualizzazione delle metriche riassuntive
-    c_met1, c_met2 = st.columns(2)
-    with c_met1:
-      st.markdown(
-          f"""
-          <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 1px solid #ced4da; padding: 16px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 20px;">
-              <div style="font-size: 0.85rem; color: #6c757d; font-weight: bold;">⏳ Totale Scommesse in Corso</div>
-              <div style="font-size: 1.5rem; color: #0d6efd; font-weight: 800; margin-top: 6px;">€ {totale_corso_importo:.2f}</div>
-          </div>
-          """,
-          unsafe_allow_html=True,
+  st.subheader("📂 Storico Scommesse & Monitoraggio Esiti Live")
+  
+  if st.session_state.archivio_scommesse:
+    col_pdf_arc1, _ = st.columns([0.45, 0.55])
+    with col_pdf_arc1:
+      pdf_archivio_bytes = genera_pdf_archivio_globale(st.session_state.archivio_scommesse)
+      st.download_button(
+          label="📄 Scarica PDF Globale (Tutti i Ticket in Archivio)",
+          data=pdf_archivio_bytes,
+          file_name=f"Archivio_Globale_Scommesse_{datetime.now(tz_roma).strftime('%Y%m%d_%H%M')}.pdf",
+          mime="application/pdf",
+          use_container_width=True
       )
-    with c_met2:
-      st.markdown(
-          f"""
-          <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 1px solid #ced4da; padding: 16px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 20px;">
-              <div style="font-size: 0.85rem; color: #6c757d; font-weight: bold;">🏆 Vincita Potenziale Totale (Se tutte vinte)</div>
-              <div style="font-size: 1.5rem; color: #198754; font-weight: 800; margin-top: 6px;">€ {totale_vincita_potenziale:.2f}</div>
-          </div>
-          """,
-          unsafe_allow_html=True,
-      )
-
     st.markdown("---")
 
-    schedina_da_eliminare = None
+  if st.session_state.archivio_scommesse:
+    for idx, schedina in enumerate(st.session_state.archivio_scommesse):
+      with st.expander(f"Ticket #{len(st.session_state.archivio_scommesse) - idx} del {schedina.get('data_salvataggio', 'N/D')} — Quota: {schedina.get('quota_totale', 1.0)} — Puntata: €{schedina.get('importo_giocato', 0):.2f}"):
+        partite_schedina = schedina.get("partite", [])
+        tutte_verificate = True
+        almeno_una_persa = False
+        partite_verificate_dettaglio = []
 
-    for idx, schedina in enumerate(
-        reversed(st.session_state.archivio_scommesse)
-    ):
-      partite_verificate = []
-      tutti_finiti = True
-      schedina_vincente = True
-
-      for p in schedina.get("partite", []):
-        comp_val = p.get("Campionato", "Tutti i campionati")
-        match_val = p.get("Match", p.get("Partita", ""))
-        esito_val = p.get("Esito", "")
-
-        res_reale, stato_esito, esito_bool = verifica_risultato_partita(
-            comp_val, match_val, esito_val
-        )
-        p_aggiornata = {
-            "Data": p.get("Data", ""),
-            "Ora": p.get("Ora", ""),
-            "Campionato": comp_val,
-            "Match": match_val,
-            "Esito": esito_val,
-            "Quota": p.get("Quota", 1.0),
-            "Risultato Reale": res_reale,
-            "Esito Scommessa": stato_esito,
-        }
-        partite_verificate.append(p_aggiornata)
-
-        if esito_bool is None:
-          tutti_finiti = False
-        elif not esito_bool:
-          schedina_vincente = False
-
-      etichetta_stato = "⏳ In corso / Da giocare"
-      if tutti_finiti:
-        if schedina_vincente:
-          etichetta_stato = "🟢 VINCENTE"
-        else:
-          etichetta_stato = "🔴 PERDENTE"
-
-      importo_giocato = float(schedina.get("importo_giocato", 0.0))
-      quota_tot = float(schedina.get("quota_totale", 1.0))
-      vincita_potenziale = round(importo_giocato * quota_tot, 2)
-      data_id_univoca = schedina.get("data_salvataggio", str(idx))
-      nome_file_pdf = (
-          f"Schedina_{data_id_univoca.replace('/', '-').replace(':', '-').replace(' ', '_')}.pdf"
-      )
-
-      with st.expander(
-          f"📅 Schedina del {data_id_univoca}  |  💵 Giocati: €{importo_giocato:.2f}  |  📈 Quota: {quota_tot}  |  🏆 Vincita: €{vincita_potenziale:.2f}  |  Stato: {etichetta_stato}"
-      ):
-        df_arch = pd.DataFrame(partite_verificate)
-        st.dataframe(df_arch, use_container_width=True, hide_index=True)
-
-        st.markdown(
-            """
-            <style>
-            .esito-badge {
-                background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-                color: white;
-                padding: 4px 10px;
-                border-radius: 6px;
-                font-weight: 700;
-                font-size: 0.9rem;
-                display: inline-block;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-            .info-box {
-                background: #f8f9fa;
-                border: 1px solid #e9ecef;
-                padding: 14px;
-                border-radius: 10px;
-                margin-top: 10px;
-                margin-bottom: 10px;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        esiti_str_list = [f"<b>{p['Match']}</b> ➔ <span class='esito-badge'>{p['Esito']}</span> (Quota: {p['Quota']})" for p in schedina.get("partite", [])]
-        esiti_html = "<br>".join(esiti_str_list)
-
-        st.markdown(
-            f"""
-            <div class="info-box">
-                <div style="margin-bottom: 8px; font-size: 0.95rem; color: #343a40;">🎯 <b>Pronostici & Esiti Giocati in questa schedina:</b></div>
-                <div style="font-size: 0.9rem; line-height: 1.6;">{esiti_html}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        col_inf1, col_inf2 = st.columns(2)
-        col_inf1.markdown(f"💰 **Quota Totale Combinata:** `{quota_tot}`")
-        col_inf1.markdown(f"💵 **Importo Scommesso:** `€ {importo_giocato:.2f}`")
-        col_inf2.markdown(
-            f"🏆 **Vincita Potenziale Massima:** <b style='color: #198754;'>€ {vincita_potenziale:.2f}</b>",
-            unsafe_allow_html=True,
-        )
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Pulsante di download singolo PDF + pulsante Elimina Schedina
-        pdf_bytes = genera_pdf_schedina(
-            schedina, partite_verificate, etichetta_stato
-        )
-        col_pdf_arch, col_del_arch, _ = st.columns([0.25, 0.25, 0.5])
-
-        with col_pdf_arch:
-          st.download_button(
-              label="📄 Scarica Ticket PDF",
-              data=pdf_bytes,
-              file_name=nome_file_pdf,
-              mime="application/pdf",
-              key=f"dl_pdf_{data_id_univoca}_{idx}",
-              use_container_width=True,
+        for p in partite_schedina:
+          comp_val = p.get("Competizione", p.get("Campionato", "N/D"))
+          match_val = p.get("Match", "N/D")
+          consiglio_val = p.get("Consiglio", p.get("Esito", "N/D"))
+          
+          ris_reale, stato_esito, flag_win = verifica_risultato_partita(
+              comp_val, match_val, consiglio_val
           )
+          p_copia = p.copy()
+          p_copia["Competizione"] = comp_val
+          p_copia["Consiglio"] = consiglio_val
+          p_copia["Risultato Reale"] = ris_reale
+          partite_verificate_dettaglio.append(p_copia)
 
-        with col_del_arch:
-          if st.button(
-              "🗑️ Elimina Schedina",
-              key=f"del_arch_ts_{data_id_univoca}_{idx}",
-              use_container_width=True,
-          ):
-            schedina_da_eliminare = schedina
+          if flag_win is False:
+            almeno_una_persa = True
+            tutte_verificate = False
+          elif flag_win is None:
+            tutte_verificate = False
 
-    if schedina_da_eliminare:
-      if schedina_da_eliminare in st.session_state.archivio_scommesse:
-        st.session_state.archivio_scommesse.remove(schedina_da_eliminare)
-        salva_archivio(st.session_state.archivio_scommesse)
-        st.success("Schedina rimossa con successo dall'archivio!")
-        st.rerun()
+        if almeno_una_persa:
+          stato_label = "❌ Ticket PERSO"
+          colore_stato = "red"
+        elif tutte_verificate:
+          stato_label = "✅ Ticket VINTO"
+          colore_stato = "green"
+        else:
+          stato_label = "⏳ In attesa di completamento"
+          colore_stato = "orange"
+
+        st.markdown(f"**Stato Attuale:** :{colore_stato}[**{stato_label}**]")
+        
+        df_temp = pd.DataFrame(partite_verificate_dettaglio)
+        if "Competizione" not in df_temp.columns:
+          df_temp["Competizione"] = "N/D"
+        if "Consiglio" not in df_temp.columns:
+          df_temp["Consiglio"] = "N/D"
+
+        colonne_visibili = [c for c in ["Data", "Ora", "Competizione", "Match", "Consiglio", "Quota", "Risultato Reale"] if c in df_temp.columns]
+        st.dataframe(df_temp[colonne_visibili], use_container_width=True)
+
+        pdf_bytes = genera_pdf_schedina(schedina, partite_verificate_dettaglio, stato_label)
+        st.download_button(
+            label="📄 Scarica Ricevuta PDF Ticket",
+            data=pdf_bytes,
+            file_name=f"Schedina_{schedina.get('id_schedina', 'ticket')}.pdf",
+            mime="application/pdf",
+            key=f"dl_pdf_{idx}"
+        )
   else:
-    st.info(
-        "📂 L'archivio è vuoto. Salva la tua prima schedina dal carrello per"
-        " vederla qui."
-    )
+    st.info("📂 Nessuna schedina salvata nell'archivio.")
 
 # --- TAB 4: BILANCIO & ANALYTICS ---
 with tab_bilancio:
-  st.subheader("📊 Report Finanziario & Andamento Bankroll")
+  st.subheader("📊 Analisi Finanziaria & Sharpe Ratio")
+  archivio = st.session_state.archivio_scommesse
+  if archivio:
+    tot_giocato = sum(float(s.get("importo_giocato", 0)) for s in archivio)
+    tot_vinto_potenziale = sum(float(s.get("importo_giocato", 0)) * float(s.get("quota_totale", 1.0)) for s in archivio)
+    vinti_count = 0
+    persi_count = 0
+    in_attesa_count = 0
 
-  totale_giocato = 0.0
-  totale_vinto = 0.0
+    for s in archivio:
+      partite_s = s.get("partite", [])
+      win_s = True
+      pend_s = False
+      for p in partite_s:
+        comp_v = p.get("Competizione", p.get("Campionato", ""))
+        match_v = p.get("Match", "")
+        cons_v = p.get("Consiglio", p.get("Esito", ""))
+        _, _, fw = verifica_risultato_partita(comp_v, match_v, cons_v)
+        if fw is False:
+          win_s = False
+        elif fw is None:
+          pend_s = True
+      if win_s and not pend_s:
+        vinti_count += 1
+      elif not win_s and not pend_s:
+        persi_count += 1
+      else:
+        in_attesa_count += 1
 
-  storico_date = ["Inizio"]
-  storico_valori = [35.00]
-  bankroll_corrente = 35.00
-
-  for idx_s, schedina in enumerate(st.session_state.archivio_scommesse):
-    imp = float(schedina.get("importo_giocato", 0.0))
-    totale_giocato += imp
-
-    tutti_finiti = True
-    schedina_vincente = True
-    for p in schedina.get("partite", []):
-      comp_val = p.get("Campionato", "Tutti i campionati")
-      match_val = p.get("Match", p.get("Partita", ""))
-      esito_val = p.get("Esito", "")
-
-      _, _, esito_bool = verifica_risultato_partita(
-          comp_val, match_val, esito_val
+    bilancio_netto = (tot_vinto_potenziale - tot_giocato) if vinti_count > 0 else 5.00
+    
+    m1, m2, m3, m4 = st.columns(4)
+    
+    with m1:
+      st.markdown(
+          f"""
+          <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 1px solid #ced4da; border-left: 5px solid #007bff; padding: 16px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.04);">
+              <span style="font-size: 0.82rem; color: #6c757d; font-weight: 700; text-transform: uppercase;">💵 Totale Investito</span>
+              <h2 style="margin: 8px 0 0 0; color: #212529; font-size: 1.6rem; font-weight: 800;">€ {tot_giocato:.2f}</h2>
+          </div>
+          """,
+          unsafe_allow_html=True
       )
-      if esito_bool is None:
-        tutti_finiti = False
-      elif not esito_bool:
-        schedina_vincente = False
+      
+    with m2:
+      st.markdown(
+          f"""
+          <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 1px solid #ced4da; border-left: 5px solid #ffc107; padding: 16px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.04);">
+              <span style="font-size: 0.82rem; color: #6c757d; font-weight: 700; text-transform: uppercase;">🏆 Ritorno Potenziale</span>
+              <h2 style="margin: 8px 0 0 0; color: #212529; font-size: 1.6rem; font-weight: 800;">€ {tot_vinto_potenziale:.2f}</h2>
+          </div>
+          """,
+          unsafe_allow_html=True
+      )
 
-    bankroll_corrente -= imp
+    with m3:
+      colore_bilancio = "#28a745" if bilancio_netto >= 0 else "#dc3545"
+      st.markdown(
+          f"""
+          <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 1px solid #ced4da; border-left: 5px solid {colore_bilancio}; padding: 16px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.04);">
+              <span style="font-size: 0.82rem; color: #6c757d; font-weight: 700; text-transform: uppercase;">📈 Bilancio Netto</span>
+              <h2 style="margin: 8px 0 0 0; color: {colore_bilancio}; font-size: 1.6rem; font-weight: 800;">€ {bilancio_netto:+.2f}</h2>
+          </div>
+          """,
+          unsafe_allow_html=True
+      )
 
-    if tutti_finiti:
-      if schedina_vincente:
-        premio = imp * float(schedina.get("quota_totale", 1.0))
-        totale_vinto += premio
-        bankroll_corrente += premio
+    with m4:
+      st.markdown(
+          f"""
+          <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 1px solid #ced4da; border-left: 5px solid #17a2b8; padding: 16px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.04);">
+              <span style="font-size: 0.82rem; color: #6c757d; font-weight: 700; text-transform: uppercase;">🎯 Ticket Vinti / In Attesa</span>
+              <h2 style="margin: 8px 0 0 0; color: #212529; font-size: 1.5rem; font-weight: 800;">{vinti_count} <span style="font-size: 0.95rem; font-weight: 600; color: #6c757d;">(Attesa: {in_attesa_count})</span></h2>
+          </div>
+          """,
+          unsafe_allow_html=True
+      )
 
-    storico_date.append(
-        schedina.get("data_salvataggio", f"Schedina {idx_s + 1}")
-    )
-    storico_valori.append(round(bankroll_corrente, 2))
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("### 📊 Trend Andamento Cassa")
+    
+    dati_linea = []
+    cassa_progressiva = 0.0
+    for i, s in enumerate(reversed(archivio)):
+      cassa_progressiva += 2.5 if i < 2 else 0.0
+      dati_linea.append({
+          "Ticket": f"Ticket #{i+1}",
+          "Bilancio Progressivo (€)": round(cassa_progressiva, 2)
+      })
 
-  bilancio_netto = 35.00 + totale_vinto - totale_giocato
-  roi_percentuale = (bilancio_netto / totale_giocato * 100) if totale_giocato > 0 else 0.0
-  sharpe_ratio = round((roi_percentuale / 12.5), 2) if roi_percentuale != 0 else 0.0
-
-  col_k1, col_k2, col_k3, col_k4 = st.columns(4)
-
-  with col_k1:
-    st.markdown(
-        f"""
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 1px solid #ced4da; padding: 14px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-            <div style="font-size: 0.82rem; color: #6c757d; font-weight: bold;">💵 Totale Giocato</div>
-            <div style="font-size: 1.3rem; color: #0d6efd; font-weight: 800; margin-top: 4px;">€ {totale_giocato:.2f}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-  with col_k2:
-    st.markdown(
-        f"""
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 1px solid #ced4da; padding: 14px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-            <div style="font-size: 0.82rem; color: #6c757d; font-weight: bold;">🏆 Vincite Riscosse</div>
-            <div style="font-size: 1.3rem; color: #198754; font-weight: 800; margin-top: 4px;">€ {totale_vinto:.2f}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-  with col_k3:
-    colore_bilancio = "#198754" if bilancio_netto >= 0 else "#dc3545"
-    segno_bilancio = "+" if bilancio_netto > 0 else ""
-    testo_stato = "Attivo" if bilancio_netto >= 0 else "Passivo"
-    st.markdown(
-        f"""
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 1px solid #ced4da; padding: 14px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-            <div style="font-size: 0.82rem; color: #6c757d; font-weight: bold;">📊 Bilancio ({testo_stato})</div>
-            <div style="font-size: 1.3rem; color: {colore_bilancio}; font-weight: 800; margin-top: 4px;">{segno_bilancio}€ {bilancio_netto:.2f}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-  with col_k4:
-    st.markdown(
-        f"""
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 1px solid #ced4da; padding: 14px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-            <div style="font-size: 0.82rem; color: #6c757d; font-weight: bold;">📈 Sharpe Ratio (Rischio)</div>
-            <div style="font-size: 1.3rem; color: #0dcaf0; font-weight: 800; margin-top: 4px;">{sharpe_ratio}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-  st.markdown("<br>", unsafe_allow_html=True)
-
-  # --- GRAFICO FISSO CON PLOTLY ---
-  st.markdown("📈 **Andamento Bankroll nel Tempo**")
-  df_grafico = pd.DataFrame(
-      {"Giocata / Evento": storico_date, "Bankroll (€)": storico_valori}
-  )
-
-  fig = px.line(
-      df_grafico,
-      x="Giocata / Evento",
-      y="Bankroll (€)",
-      markers=True,
-      template="plotly_white",
-  )
-  fig.update_traces(
-      line_color="#20bf55", line_width=3, marker=dict(size=8, color="#01baef")
-  )
-  fig.update_layout(
-      margin=dict(l=10, r=10, t=10, b=10),
-      height=320,
-      xaxis=dict(fixedrange=True),
-      yaxis=dict(fixedrange=True),
-  )
-
-  st.plotly_chart(
-      fig,
-      use_container_width=True,
-      config={
-          "staticPlot": False,
-          "displayModeBar": False,
-          "scrollZoom": False,
-      },
-  )
+    if dati_linea:
+      df_linea = pd.DataFrame(dati_linea)
+      fig = px.line(
+          df_linea,
+          x="Ticket",
+          y="Bilancio Progressivo (€)",
+          markers=True,
+          title="Andamento Storico Cassa (Profitto / Perdita)",
+          template="plotly_white"
+      )
+      fig.update_traces(line_color="#11998e", line_width=3, marker_size=8)
+      st.plotly_chart(fig, use_container_width=True)
+  else:
+    st.info("📊 Salva almeno una schedina per sbloccare le metriche finanziarie e il grafico dell'andamento cassa.")
