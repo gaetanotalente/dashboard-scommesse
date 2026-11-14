@@ -1,0 +1,50 @@
+[
+    {
+        "data_salvataggio": "14/11/2026 11:31:42",
+        "quota_totale": 1.85,
+        "importo_giocato": 10.0,
+        "vincita_potenziale": 18.5,
+        "partite": [
+            {
+                "Data": "14/11/2026",
+                "Ora": "18:00",
+                "Campionato": "UEFA Nations League",
+                "Match": "Kosovo vs Israele",
+                "Esito": "Over 2.5",
+                "Quota": 1.85
+            }
+        ]
+    },
+    {
+        "data_salvataggio": "14/11/2026 11:32:33",
+        "quota_totale": 1.72,
+        "importo_giocato": 10.0,
+        "vincita_potenziale": 17.2,
+        "partite": [
+            {
+                "Data": "14/11/2026",
+                "Ora": "20:45",
+                "Campionato": "UEFA Nations League",
+                "Match": "Romania vs Polonia",
+                "Esito": "Goal (Entrambe Segnano)",
+                "Quota": 1.72
+            }
+        ]
+    },
+    {
+        "data_salvataggio": "14/11/2026 11:33:11",
+        "quota_totale": 1.9,
+        "importo_giocato": 10.0,
+        "vincita_potenziale": 19.0,
+        "partite": [
+            {
+                "Data": "14/11/2026",
+                "Ora": "18:00",
+                "Campionato": "UEFA Nations League",
+                "Match": "Georgia vs Ungheria",
+                "Esito": "Goal (Entrambe Segnano)",
+                "Quota": 1.9
+            }
+        ]
+    }
+]
