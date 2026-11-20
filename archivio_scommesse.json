@@ -1,50 +1,104 @@
 [
     {
-        "data_salvataggio": "14/11/2026 11:31:42",
-        "quota_totale": 1.85,
-        "importo_giocato": 10.0,
-        "vincita_potenziale": 18.5,
+        "id_schedina": "schedina_20261117_150339",
+        "data_salvataggio": "17/11/2026 15:03",
         "partite": [
             {
-                "Data": "14/11/2026",
-                "Ora": "18:00",
-                "Campionato": "UEFA Nations League",
-                "Match": "Kosovo vs Israele",
-                "Esito": "Over 2.5",
-                "Quota": 1.85
-            }
-        ]
-    },
-    {
-        "data_salvataggio": "14/11/2026 11:32:33",
-        "quota_totale": 1.72,
-        "importo_giocato": 10.0,
-        "vincita_potenziale": 17.2,
-        "partite": [
-            {
-                "Data": "14/11/2026",
+                "ID": "2026-11-17_Danimarca_Norvegia",
+                "Data": "17/11/2026",
                 "Ora": "20:45",
-                "Campionato": "UEFA Nations League",
-                "Match": "Romania vs Polonia",
-                "Esito": "Goal (Entrambe Segnano)",
-                "Quota": 1.72
+                "Competizione": "UEFA Nations League - League A",
+                "Match": "Danimarca vs Norvegia",
+                "Consiglio": "Goal (Entrambe Segnano)",
+                "Quota": 1.36,
+                "ValoreProb": 66.3,
+                "Analisi xG": "xG: 1.90 - 1.60 | Poisson [1:32.2% X:22.0% 2:43.8%]",
+                "Motivazione": "[UEFA Nations League - League A] Modello xG: 1.9 vs 1.6. Totale atteso 3.50 gol. ⚖️ Mercato stabile.",
+                "ValueBet": true,
+                "EV": 0.372
+            },
+            {
+                "ID": "2026-11-17_Polonia_Svezia",
+                "Data": "17/11/2026",
+                "Ora": "20:45",
+                "Competizione": "UEFA Nations League - League B",
+                "Match": "Polonia vs Svezia",
+                "Consiglio": "Goal (Entrambe Segnano)",
+                "Quota": 1.45,
+                "ValoreProb": 66.3,
+                "Analisi xG": "xG: 1.90 - 1.60 | Poisson [1:32.2% X:22.0% 2:43.8%]",
+                "Motivazione": "[UEFA Nations League - League B] Modello xG: 1.9 vs 1.6. Totale atteso 3.50 gol. ⚖️ Mercato stabile.",
+                "ValueBet": true,
+                "EV": 0.306
             }
-        ]
+        ],
+        "quota_totale": 1.97,
+        "importo_giocato": 10.0,
+        "vincita_potenziale": 19.72,
+        "stato_manuale": "vinto",
+        "concluso": true
     },
     {
-        "data_salvataggio": "14/11/2026 11:33:11",
-        "quota_totale": 1.9,
-        "importo_giocato": 10.0,
-        "vincita_potenziale": 19.0,
+        "id_schedina": "schedina_20261117_150124",
+        "data_salvataggio": "17/11/2026 15:01",
         "partite": [
             {
-                "Data": "14/11/2026",
-                "Ora": "18:00",
-                "Campionato": "UEFA Nations League",
-                "Match": "Georgia vs Ungheria",
-                "Esito": "Goal (Entrambe Segnano)",
-                "Quota": 1.9
+                "ID": "2026-11-16_Switzerland_Scotland",
+                "Data": "16/11/2026",
+                "Ora": "20:45",
+                "Competizione": "UEFA Nations League",
+                "Match": "Switzerland vs Scotland",
+                "Consiglio": "Over 2.5",
+                "Quota": 1.8,
+                "ValoreProb": 59.0,
+                "Analisi xG": "xG: 2.05 - 1.10 | Poisson [1:19.7% X:21.0% 2:57.4%]",
+                "Motivazione": "[UEFA Nations League] Modello xG: 2.05 vs 1.1. Totale atteso 3.15 gol. ⚖️ Mercato stabile.",
+                "ValueBet": true,
+                "EV": 0.127
             }
-        ]
+        ],
+        "quota_totale": 1.8,
+        "importo_giocato": 10.0,
+        "vincita_potenziale": 18.0,
+        "stato_manuale": "vinto",
+        "concluso": true
+    },
+    {
+        "id_schedina": "schedina_storica_vinta_01",
+        "data_salvataggio": "15/11/2026 20:00",
+        "partite": [
+            {
+                "Data": "15/11/2026",
+                "Ora": "20:45",
+                "Competizione": "UEFA Nations League",
+                "Match": "Storico Giocata #1",
+                "Consiglio": "1 (Vittoria Casa)",
+                "Quota": 1.42
+            }
+        ],
+        "quota_totale": 1.42,
+        "importo_giocato": 10.0,
+        "vincita_potenziale": 14.2,
+        "stato_manuale": "vinto",
+        "concluso": true
+    },
+    {
+        "id_schedina": "schedina_storica_persa_02",
+        "data_salvataggio": "15/11/2026 21:00",
+        "partite": [
+            {
+                "Data": "15/11/2026",
+                "Ora": "21:00",
+                "Competizione": "UEFA Nations League",
+                "Match": "Storico Giocata #2",
+                "Consiglio": "2 (Vittoria Ospite)",
+                "Quota": 2.0
+            }
+        ],
+        "quota_totale": 2.0,
+        "importo_giocato": 10.0,
+        "vincita_potenziale": 20.0,
+        "stato_manuale": "perso",
+        "concluso": true
     }
 ]
